@@ -1,0 +1,898 @@
+{
+  "schemaVersion": "2021-11-01",
+  "name": "Zero-Trust Lens (Organization Custom)",
+  "description": "Assess workloads against AWS Zero-Trust principles: identity-first, least privilege, network segmentation, device posture, data protection, observability, and automated response.",
+  "pillars": [
+    {
+      "id": "zt_identity",
+      "name": "Identity & Access",
+      "questions": [
+        {
+          "id": "zt_iam_1",
+          "title": "Are all access decisions identity-based and enforced with MFA?",
+          "description": "Use MFA for human users and enforce temporary credentials for workloads. Avoid long-term IAM access keys.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Fully enforced: MFA for users, temporary sessions for workloads, no long-term keys",
+              "helpfulResource": {
+                "displayText": "MFA overview",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html"
+              },
+              "improvementPlan": {
+                "displayText": "Enable MFA everywhere and replace long-term keys with IAM roles.",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially enforced: some identities still lack MFA or use long-term keys",
+              "helpfulResource": {
+                "displayText": "ABAC overview",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction_attribute-based-access-control.html"
+              },
+              "improvementPlan": {
+                "displayText": "Phase out remaining long-term keys, enforce MFA with policies.",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "Not enforced",
+              "helpfulResource": {
+                "displayText": "STS overview",
+                "url": "https://docs.aws.amazon.com/STS/latest/APIReference/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Implement MFA and short-lived sessions.",
+                "url": "https://docs.aws.amazon.com/STS/latest/APIReference/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_iam_2",
+          "title": "Is least privilege implemented via roles and ABAC with tags?",
+          "description": "Implement role separation and attribute-based access control (tags) to scope permissions.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: minimal roles, ABAC, and scheduled access reviews",
+              "helpfulResource": {
+                "displayText": "ABAC in IAM",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction_attribute-based-access-control.html"
+              },
+              "improvementPlan": {
+                "displayText": "Adopt ABAC and periodic permission reviews.",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction_attribute-based-access-control.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: a few broad admin roles remain",
+              "helpfulResource": {
+                "displayText": "Policy conditions",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html"
+              },
+              "improvementPlan": {
+                "displayText": "Reduce broad permissions and add tag-based conditions.",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: wildcard or admin policies are common",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Refactor to scoped roles, remove wildcard actions/resources.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_iam_3",
+          "title": "Are session durations and MFA age constraints enforced for sensitive actions?",
+          "description": "Use aws:MultiFactorAuthPresent and aws:MultiFactorAuthAge to require fresh MFA and limit session lifetime.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: MFA age and short session duration enforced for admin/sensitive roles",
+              "helpfulResource": {
+                "displayText": "Policy condition keys",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html"
+              },
+              "improvementPlan": {
+                "displayText": "Add MFA age checks and reduce session duration.",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: only some roles enforce it",
+              "helpfulResource": {
+                "displayText": "STS reference",
+                "url": "https://docs.aws.amazon.com/STS/latest/APIReference/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Expand enforcement to all sensitive roles.",
+                "url": "https://docs.aws.amazon.com/STS/latest/APIReference/welcome.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: long sessions without MFA checks",
+              "helpfulResource": {
+                "displayText": "MFA overview",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html"
+              },
+              "improvementPlan": {
+                "displayText": "Enable MFA checks and shorten sessions.",
+                "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zt_network",
+      "name": "Network & Segmentation",
+      "questions": [
+        {
+          "id": "zt_net_1",
+          "title": "Is multi-account segmentation and OU guardrails in place?",
+          "description": "Use AWS Organizations, OUs, and SCPs to isolate environments and workloads.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Fully: multi-account with OU guardrails and shared services",
+              "helpfulResource": {
+                "displayText": "Organizations SCP",
+                "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html"
+              },
+              "improvementPlan": {
+                "displayText": "Set OU structure with SCP guardrails.",
+                "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: limited account/VPC segmentation",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Expand segmentation and guardrails.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: single account or flat VPC",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Start multi-account landing zone.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_net_2",
+          "title": "Is console/API access restricted to corporate egress IPs or VPN?",
+          "description": "Restrict access using SCP/IAM 'NotIpAddress' and static egress IP through Client VPN or proxy.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: enforced via SCP/IAM with static egress IPs",
+              "helpfulResource": {
+                "displayText": "SCP guide",
+                "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html"
+              },
+              "improvementPlan": {
+                "displayText": "Apply IP-based conditions in SCP/IAM.",
+                "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: only some roles or accounts",
+              "helpfulResource": {
+                "displayText": "Client VPN",
+                "url": "https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html"
+              },
+              "improvementPlan": {
+                "displayText": "Standardize IP restrictions across accounts.",
+                "url": "https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: access allowed from any IP",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Implement egress controls and IP restrictions.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_net_3",
+          "title": "Is remote access from home enforced through full-tunnel VPN or Verified Access?",
+          "description": "Ensure all traffic goes through corporate egress with logging and posture checks.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: Client VPN (full tunnel) or Verified Access with logs",
+              "helpfulResource": {
+                "displayText": "Client VPN",
+                "url": "https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html"
+              },
+              "improvementPlan": {
+                "displayText": "Enable full-tunnel and logging.",
+                "url": "https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: VPN exists but not full tunnel or logging incomplete",
+              "helpfulResource": {
+                "displayText": "Verified Access",
+                "url": "https://docs.aws.amazon.com/verified-access/latest/ug/what-is-verified-access.html"
+              },
+              "improvementPlan": {
+                "displayText": "Enforce full-tunnel and central logs.",
+                "url": "https://docs.aws.amazon.com/verified-access/latest/ug/what-is-verified-access.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: direct access from home allowed",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Introduce VPN/Verified Access.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zt_device",
+      "name": "Device & Endpoint",
+      "questions": [
+        {
+          "id": "zt_dev_1",
+          "title": "Are only trusted devices allowed to authenticate (via IdP device trust or Verified Access)?",
+          "description": "Require device enrollment and posture checks before session issuance.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: device trust enforced via IdP or Verified Access",
+              "helpfulResource": {
+                "displayText": "Verified Access",
+                "url": "https://docs.aws.amazon.com/verified-access/latest/ug/what-is-verified-access.html"
+              },
+              "improvementPlan": {
+                "displayText": "Integrate device posture in access decisions.",
+                "url": "https://docs.aws.amazon.com/verified-access/latest/ug/what-is-verified-access.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: advisory-only checks",
+              "helpfulResource": {
+                "displayText": "Verified Access policies",
+                "url": "https://docs.aws.amazon.com/verified-access/latest/ug/what-is-verified-access.html"
+              },
+              "improvementPlan": {
+                "displayText": "Make posture checks mandatory.",
+                "url": "https://docs.aws.amazon.com/verified-access/latest/ug/what-is-verified-access.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: any device can connect",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Adopt device trust and registration.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_dev_2",
+          "title": "Is remote administration performed via SSM Session Manager instead of direct SSH/RDP?",
+          "description": "Use SSM for auditable, no-inbound access to instances.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: SSM replaces direct access, sessions logged",
+              "helpfulResource": {
+                "displayText": "Session Manager",
+                "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html"
+              },
+              "improvementPlan": {
+                "displayText": "Adopt SSM across fleets.",
+                "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: mixed SSM and direct access",
+              "helpfulResource": {
+                "displayText": "Session Manager",
+                "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html"
+              },
+              "improvementPlan": {
+                "displayText": "Remove direct paths, enforce SSM.",
+                "url": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: direct SSH/RDP over the internet",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Migrate to SSM with IAM controls.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zt_data",
+      "name": "Data & Secrets",
+      "questions": [
+        {
+          "id": "zt_data_1",
+          "title": "Is encryption at rest and in transit enforced with managed keys?",
+          "description": "Use KMS CMKs and TLS for all services and data paths.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: default encryption and TLS everywhere",
+              "helpfulResource": {
+                "displayText": "KMS concepts",
+                "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+              },
+              "improvementPlan": {
+                "displayText": "Enforce encryption at rest and in transit.",
+                "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: some data paths unencrypted",
+              "helpfulResource": {
+                "displayText": "KMS concepts",
+                "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+              },
+              "improvementPlan": {
+                "displayText": "Close remaining encryption gaps.",
+                "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: inconsistent encryption",
+              "helpfulResource": {
+                "displayText": "KMS concepts",
+                "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+              },
+              "improvementPlan": {
+                "displayText": "Enable encryption and key management.",
+                "url": "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_data_2",
+          "title": "Are secrets centrally managed with rotation (no secrets in code)?",
+          "description": "Manage secrets via Secrets Manager or Parameter Store with rotation.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: centralized secrets with rotation",
+              "helpfulResource": {
+                "displayText": "Secrets Manager",
+                "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+              },
+              "improvementPlan": {
+                "displayText": "Adopt central secret stores and rotation.",
+                "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: some secrets still in env/code",
+              "helpfulResource": {
+                "displayText": "Secrets Manager",
+                "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+              },
+              "improvementPlan": {
+                "displayText": "Migrate remaining secrets.",
+                "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: secrets embedded in code or configs",
+              "helpfulResource": {
+                "displayText": "Secrets Manager",
+                "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+              },
+              "improvementPlan": {
+                "displayText": "Remove hard-coded secrets.",
+                "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zt_apps",
+      "name": "Apps & Workloads",
+      "questions": [
+        {
+          "id": "zt_app_1",
+          "title": "Are service-to-service communications identity-based (e.g., SG-to-SG, IAM roles, IRSA)?",
+          "description": "Prefer identity-based and SG-referenced rules over static IPs.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: identity-based controls across services",
+              "helpfulResource": {
+                "displayText": "VPC PrivateLink",
+                "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/privatelink.html"
+              },
+              "improvementPlan": {
+                "displayText": "Adopt identity-based patterns.",
+                "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/privatelink.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: mix of identity and static IPs",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Reduce IP dependencies.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: IP-based allowlists dominate",
+              "helpfulResource": {
+                "displayText": "SRA",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              },
+              "improvementPlan": {
+                "displayText": "Refactor to identity-based access.",
+                "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_app_2",
+          "title": "Are inbound edges protected (WAF, DDoS protections) with least-privilege origins?",
+          "description": "Use AWS WAF and restrict origins, terminate TLS with managed certs.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: WAF/Shield with strict origin policies",
+              "helpfulResource": {
+                "displayText": "AWS WAF",
+                "url": "https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html"
+              },
+              "improvementPlan": {
+                "displayText": "Harden edges and origins.",
+                "url": "https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: basic protections only",
+              "helpfulResource": {
+                "displayText": "AWS WAF",
+                "url": "https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html"
+              },
+              "improvementPlan": {
+                "displayText": "Tighten rules and monitoring.",
+                "url": "https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: public origins and minimal filtering",
+              "helpfulResource": {
+                "displayText": "AWS WAF",
+                "url": "https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html"
+              },
+              "improvementPlan": {
+                "displayText": "Deploy WAF and origin restrictions.",
+                "url": "https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zt_observe",
+      "name": "Observability & Response",
+      "questions": [
+        {
+          "id": "zt_ob_1",
+          "title": "Are CloudTrail/Config/Access logs enabled across all accounts and Regions and centralized?",
+          "description": "Centralize logs to dedicated account, enable organization trails.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: org-level trails and central log archive",
+              "helpfulResource": {
+                "displayText": "CloudTrail",
+                "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+              },
+              "improvementPlan": {
+                "displayText": "Enable org trails and central buckets.",
+                "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: some accounts or regions missing",
+              "helpfulResource": {
+                "displayText": "CloudTrail",
+                "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+              },
+              "improvementPlan": {
+                "displayText": "Complete coverage and centralization.",
+                "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: logging inconsistent",
+              "helpfulResource": {
+                "displayText": "CloudTrail",
+                "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+              },
+              "improvementPlan": {
+                "displayText": "Turn on trails and retention.",
+                "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_ob_2",
+          "title": "Do sign-in and policy-violation events create automated alerts and tickets?",
+          "description": "Use EventBridge rules to detect anomalies and route to SNS/ChatOps/SOAR.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: automated detection and routed alerts",
+              "helpfulResource": {
+                "displayText": "EventBridge",
+                "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html"
+              },
+              "improvementPlan": {
+                "displayText": "Add rules for risky events.",
+                "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: limited alerts",
+              "helpfulResource": {
+                "displayText": "EventBridge",
+                "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html"
+              },
+              "improvementPlan": {
+                "displayText": "Broaden rules and destinations.",
+                "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: no alerting",
+              "helpfulResource": {
+                "displayText": "EventBridge",
+                "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html"
+              },
+              "improvementPlan": {
+                "displayText": "Create baseline alert rules.",
+                "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        },
+        {
+          "id": "zt_ob_3",
+          "title": "Is end-to-end tracing and key security metrics monitored?",
+          "description": "Use AWS X-Ray/OTel with dashboards for latency, errors, and auth failures.",
+          "choices": [
+            {
+              "id": "best",
+              "title": "Yes: traces and metrics correlated",
+              "helpfulResource": {
+                "displayText": "AWS X-Ray",
+                "url": "https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html"
+              },
+              "improvementPlan": {
+                "displayText": "Instrument services and build dashboards.",
+                "url": "https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html"
+              }
+            },
+            {
+              "id": "partial",
+              "title": "Partially: logs only or partial tracing",
+              "helpfulResource": {
+                "displayText": "AWS X-Ray",
+                "url": "https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html"
+              },
+              "improvementPlan": {
+                "displayText": "Expand tracing coverage.",
+                "url": "https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html"
+              }
+            },
+            {
+              "id": "none",
+              "title": "No: minimal visibility",
+              "helpfulResource": {
+                "displayText": "AWS X-Ray",
+                "url": "https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html"
+              },
+              "improvementPlan": {
+                "displayText": "Adopt tracing and metrics.",
+                "url": "https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html"
+              }
+            }
+          ],
+          "riskRules": [
+            {
+              "condition": "best",
+              "risk": "NO_RISK"
+            },
+            {
+              "condition": "!best && partial",
+              "risk": "MEDIUM_RISK"
+            },
+            {
+              "condition": "default",
+              "risk": "HIGH_RISK"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
