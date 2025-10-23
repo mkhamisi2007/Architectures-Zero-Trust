@@ -1,0 +1,10 @@
+{
+  "Condition": {
+    "BoolIfExists": {
+      "aws:MultiFactorAuthPresent": "true"
+    },
+    "NumericLessThanEquals": {
+      "aws:MultiFactorAuthAge": 3600
+    }
+  }
+}
