@@ -1,0 +1,10 @@
+# GitLab CI/CD
+security_scan:
+  stage: test
+  image: python:3.11
+  script:
+    - pip install prowler
+    - prowler aws -M json -o reports/
+  artifacts:
+    paths:
+      - reports/
