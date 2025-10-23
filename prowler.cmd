@@ -6,6 +6,7 @@ prowler aws
 prowler aws -M html,json -o output/
 prowler aws -c check_mfa_enabled,check_iam_password_policy
 
+prowler aws -s iam
 
 --------------------------
 C:\Users\Administrateur>prowler aws
